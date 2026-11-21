@@ -4,6 +4,8 @@
 
 This tutorial was written from a real setup that was built and tested end to end — including an actual phone-reboot test. Follow the chapters in order and by the end, the **OpenCode Mobile** app on your phone will be connected to an OpenCode server, and you'll be able to watch, resume, and steer coding sessions from anywhere. The couch counts.
 
+> **Too dumb to read?** Share this GitHub link to your favorite AI agent and ask it to guide you 😬
+
 > **Versions used in this tutorial**
 > - App: **OpenCode Mobile v0.17.0** (unofficial client by beppe2880) — API spec **2.0.27**
 > - Phone server: **OpenCode 2.0.27** inside proot Ubuntu (Termux)

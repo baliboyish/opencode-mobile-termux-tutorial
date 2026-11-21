@@ -4,6 +4,8 @@
 
 Tutorial ini ditulis dari setup nyata yang dibangun dan diuji sendiri (termasuk uji restart HP beneran), bukan teori. Kalau kamu ikuti urutannya, di akhir tutorial app **OpenCode Mobile** di HP-mu akan terhubung ke server OpenCode dan kamu bisa memantau, melanjutkan, dan mengontrol sesi coding dari mana saja — minimal dari kasur.
 
+> **Males baca?** Bagikan link GitHub ini ke AI agent favoritmu dan suruh dia yang memandumu 😬
+
 > **Versi yang dipakai tutorial ini**
 > - App: **OpenCode Mobile v0.17.0** (unofficial client oleh beppe2880) — spec API **2.0.27**
 > - Server di HP: **OpenCode 2.0.27** di dalam proot Ubuntu (Termux)
