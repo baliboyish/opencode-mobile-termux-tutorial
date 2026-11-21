@@ -1,172 +1,174 @@
-# OpenCode di HP — Tutorial Termux + OpenCode Mobile dari Nol (For Dummy)
+# OpenCode on Your Phone — The Complete Termux + OpenCode Mobile Tutorial (For Dummies)
 
-**Kontrol sesi coding OpenCode kamu dari HP, pakai UI yang elegan — server-nya jalan di HP kamu sendiri (Termux), atau di laptop/desktop kamu.**
+**Control your OpenCode coding sessions from your phone with a clean, elegant app — while the server runs on the phone itself (Termux), or on your laptop/desktop.**
 
-Tutorial ini ditulis dari setup nyata yang dibangun dan diuji sendiri (termasuk uji restart HP beneran), bukan teori. Kalau kamu ikuti urutannya, di akhir tutorial app **OpenCode Mobile** di HP-mu akan terhubung ke server OpenCode dan kamu bisa memantau, melanjutkan, dan mengontrol sesi coding dari mana saja — minimal dari kasur.
+This tutorial was written from a real setup that was built and tested end to end — including an actual phone-reboot test. Follow the chapters in order and by the end, the **OpenCode Mobile** app on your phone will be connected to an OpenCode server, and you'll be able to watch, resume, and steer coding sessions from anywhere. The couch counts.
 
-> **Versi yang dipakai tutorial ini**
-> - App: **OpenCode Mobile v0.17.0** (unofficial client oleh beppe2880) — spec API **2.0.27**
-> - Server di HP: **OpenCode 2.0.27** di dalam proot Ubuntu (Termux)
-> - Server bonus di laptop: OpenCode Desktop **2.3.2** (Bab 8)
+> **Versions used in this tutorial**
+> - App: **OpenCode Mobile v0.17.0** (unofficial client by beppe2880) — API spec **2.0.27**
+> - Phone server: **OpenCode 2.0.27** inside proot Ubuntu (Termux)
+> - Bonus desktop server: OpenCode Desktop **2.3.2** (Chapter 8)
 >
-> Angka versi ini penting. Separuh tutorial ini isinya soal *mencocokkan versi* — baca Bab 2 sebelum lompat ke mana-mana.
+> These version numbers matter. Half of this tutorial is about *matching versions* — read Chapter 2 before jumping anywhere.
+
+*🇮🇩 Versi Bahasa Indonesia: [README.id.md](README.id.md)*
 
 ---
 
-## Daftar Isi
+## Table of Contents
 
-- [Bab 0 — Gambaran besar](#bab-0--gambaran-besar)
-- [Bab 1 — Bahan-bahan](#bab-1--bahan-bahan)
-- [Bab 2 — Kenapa app-nya bilang "Not found on the server"](#bab-2--kenapa-app-nya-bilang-not-found-on-the-server)
-- [Bab 3 — Cara gampang: suruh agent yang ngerjain](#bab-3--cara-gampang-suruh-agent-yang-ngerjain)
-- [Bab 4 — Cara manual: proot Ubuntu + OpenCode 2.0.27](#bab-4--cara-manual-proot-ubuntu--opencode-2027)
-- [Bab 5 — Pairing ke app](#bab-5--pairing-ke-app)
-- [Bab 6 — Biar awet: auto-start, baterai, start/stop](#bab-6--biar-awet-auto-start-baterai-startstop)
-- [Bab 7 — Troubleshooting](#bab-7--troubleshooting)
-- [Bab 8 — Bonus: server kedua dari laptop/desktop via Tailscale](#bab-8--bonus-server-kedua-dari-laptopdesktop-via-tailscale)
-- [Bab 9 — Keamanan (jangan skip)](#bab-9--keamanan-jangan-skip)
-- [Penutup](#penutup)
+- [Chapter 0 — The big picture](#chapter-0--the-big-picture)
+- [Chapter 1 — What you need](#chapter-1--what-you-need)
+- [Chapter 2 — Why the app says "Not found on the server"](#chapter-2--why-the-app-says-not-found-on-the-server)
+- [Chapter 3 — The easy way: let an agent build it for you](#chapter-3--the-easy-way-let-an-agent-build-it-for-you)
+- [Chapter 4 — The manual way: proot Ubuntu + OpenCode 2.0.27](#chapter-4--the-manual-way-proot-ubuntu--opencode-2027)
+- [Chapter 5 — Pairing the app](#chapter-5--pairing-the-app)
+- [Chapter 6 — Making it survive: auto-start, battery, start/stop](#chapter-6--making-it-survive-auto-start-battery-startstop)
+- [Chapter 7 — Troubleshooting](#chapter-7--troubleshooting)
+- [Chapter 8 — Bonus: a second server from your laptop/desktop via Tailscale](#chapter-8--bonus-a-second-server-from-your-laptopdesktop-via-tailscale)
+- [Chapter 9 — Security (do not skip)](#chapter-9--security-do-not-skip)
+- [Closing](#closing)
 
 ---
 
-## Bab 0 — Gambaran besar
+## Chapter 0 — The big picture
 
-App OpenCode Mobile itu cuma **remote control**. Dia butuh "mesin" berupa server OpenCode yang jalan di suatu tempat. Tutorial ini memasang mesinnya di dua tempat:
+The OpenCode Mobile app is just a **remote control**. It needs an engine: an OpenCode server running somewhere. This tutorial installs that engine in two places:
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│ HP kamu                                                      │
+│ Your phone                                                   │
 │                                                              │
-│  App OpenCode Mobile ──► 127.0.0.1:4096                      │
+│  OpenCode Mobile app ──► 127.0.0.1:4096                      │
 │                              │                               │
 │                     ┌────────▼─────────────┐                 │
 │                     │ proot Ubuntu (Termux)│                 │
 │                     │ OpenCode 2.0.27      │                 │
 │                     └──────────────────────┘                 │
 │                                                              │
-│  (Bonus, Bab 8) app yang sama juga bisa menunjuk ke:         │
-│  Laptop/Desktop ──► http://<ip-tailscale-laptop>:4096        │
+│  (Bonus, Chapter 8) the same app can also point to:          │
+│  Laptop/Desktop ──► http://<laptop-tailscale-ip>:4096        │
 │                     OpenCode Desktop 2.3.2                   │
 └──────────────────────────────────────────────────────────────┘
 ```
 
-Kenapa server-nya harus pakai proot Ubuntu, nggak cukup OpenCode Termux biasa? Itu inti masalahnya — lanjut ke Bab 2. Tapi sebelumnya, siapkan bahan-bahannya dulu.
+Why does the server need proot Ubuntu instead of plain Termux OpenCode? That is the core problem — see Chapter 2. But first, gather your ingredients.
 
 ---
 
-## Bab 1 — Bahan-bahan
+## Chapter 1 — What you need
 
-1. **HP Android** (tutorial ini diuji di Android 14, tanpa root).
-2. **Termux** — install dari [F-Droid](https://f-droid.org/packages/com.termux/) atau dari [GitHub Releases](https://github.com/termux/termux-app/releases).
-   ⚠️ **Penting:** semua add-on Termux (Termux:Boot, Termux:API, dll.) harus dari **sumber yang sama** dengan Termux-mu, karena tanda tangan digitalnya harus cocok. Termux dari F-Droid → add-on dari F-Droid. Kalau install add-on ditolak Android dengan error *signature/conflict*, itu penyebabnya.
-3. **OpenCode Mobile** — download dari repo resminya:
+1. **An Android phone** (this tutorial was tested on Android 14, no root).
+2. **Termux** — install from [F-Droid](https://f-droid.org/packages/com.termux/) or [GitHub Releases](https://github.com/termux/termux-app/releases).
+   ⚠️ **Important:** every Termux add-on (Termux:Boot, Termux:API, etc.) must come from the **same source** as your Termux, because their digital signatures must match. Termux from F-Droid → add-ons from F-Droid. If Android refuses to install an add-on with a *signature/conflict* error, this is why.
+3. **OpenCode Mobile** — download from the official repo:
    - Repo: https://github.com/beppe2880/opencode-mobile
-   - Release v0.17.0: https://github.com/beppe2880/opencode-mobile/releases/tag/v0.17.0
-4. **OpenCode di Termux** (cara install standarnya, misalnya build komunitas guysoft) — ini yang akan jadi bahan bakar Bab 3. Kalau kamu sudah punya OpenCode jalan di Termux, kamu sudah punya modal utama tutorial ini.
-5. **Termux:Boot** — nanti untuk Bab 6, install dari sumber yang sama dengan Termux-mu (mis. [F-Droid](https://f-droid.org/packages/com.termux.boot/)).
-6. Opsional tapi sangat disarankan: **Tailscale** di HP dan laptop (untuk Bab 8).
+   - v0.17.0 release: https://github.com/beppe2880/opencode-mobile/releases/tag/v0.17.0
+4. **OpenCode inside Termux** (the standard install, e.g. the community guysoft build) — this is the fuel for Chapter 3. If you already have OpenCode running in Termux, you already hold the main ingredient of this tutorial.
+5. **Termux:Boot** — for Chapter 6, from the same source as your Termux (e.g. [F-Droid](https://f-droid.org/packages/com.termux.boot/)).
+6. Optional but highly recommended: **Tailscale** on your phone and laptop (for Chapter 8).
 
 ---
 
-## Bab 2 — Kenapa app-nya bilang "Not found on the server"
+## Chapter 2 — Why the app says "Not found on the server"
 
-Ini jebakan pertama yang hampir pasti kamu temui, dan penyebabnya **bukan** password salah.
+This is the first trap almost everyone hits, and the cause is **not** a wrong password.
 
-App OpenCode Mobile v0.17.0 memeriksa identitas server lewat endpoint:
+OpenCode Mobile v0.17.0 checks the server's identity through this endpoint:
 
 ```
 GET /api/info
 ```
 
-Endpoint itu bagian dari spec API **2.0.27**. Masalahnya, OpenCode native Termux yang umum beredar (build guysoft) versinya **2.0.0** — dia cuma punya endpoint lama `/api/server`, dan `/api/info` di dia **tidak ada (404)**. App menerjemahkan 404 itu menjadi pesan:
+That endpoint belongs to API spec **2.0.27**. The problem: the common native Termux build of OpenCode (the guysoft build) is version **2.0.0** — it only has the old `/api/server` endpoint, and `/api/info` **does not exist on it (404)**. The app translates that 404 into this message:
 
 > **"Not found on the server"**
 
-Cek sendiri server lamamu:
+Check your old server yourself:
 
 ```bash
 opencode service status
-# → http://127.0.0.1:28570  (versi 2.0.0-android-termux.2)
+# → http://127.0.0.1:28570  (version 2.0.0-android-termux.2)
 
-curl -s http://127.0.0.1:28570/api/server   # → 200, servernya hidup
+curl -s http://127.0.0.1:28570/api/server   # → 200, the server is alive
 curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:28570/api/info
-# → 404  ← ini biang masalahnya
+# → 404  ← this is the culprit
 ```
 
-Kesimpulan kerasnya:
+The hard conclusions:
 
-- **Downgrade app tidak membantu** — semua rilis app memakai `/api/info`.
-- **Upgrade native Termux tidak tersedia** — build native terbaru masih 2.0.0.
-- **Spec-nya harus cocok.** App v0.17.0 = 118 path API. Server yang benar harus menyediakan 118 path itu (persis, atau superset-nya seperti di Bab 8).
+- **Downgrading the app doesn't help** — every app release uses `/api/info`.
+- **Upgrading the native Termux build isn't available** — the newest native build is still 2.0.0.
+- **The spec must match.** App v0.17.0 = 118 API paths. The right server must provide those 118 paths (exactly, or a superset like in Chapter 8).
 
-Jadi solusinya: jalankan **OpenCode 2.0.27** — dan karena build native-nya tidak ada, kita jalankan dia di dalam **proot Ubuntu** di Termux. Kedengarannya ribet, dan memang ribet — makanya ada Bab 3.
+So the fix: run **OpenCode 2.0.27** — and since there is no native build of it, we run it inside **proot Ubuntu** in Termux. Sounds like a lot, and it kind of is — which is why Chapter 3 exists.
 
 ---
 
-## Bab 3 — Cara gampang: suruh agent yang ngerjain
+## Chapter 3 — The easy way: let an agent build it for you
 
-Kamu sudah punya OpenCode jalan di Termux? Berarti kamu punya *agent* yang bisa disuruh membangun semua ini untukmu. Ini cara yang dipakai penulis tutorial ini, dan berhasil.
+Already have OpenCode running in Termux? Then you have an *agent* that can build all of this for you. This is the method the author of this tutorial used, and it worked.
 
-1. Buka Termux, jalankan:
+1. Open Termux and run:
 
    ```bash
    opencode
    ```
 
-2. Paste link repo app-nya, lalu bilang persis seperti ini:
+2. Paste the app repo link, then say exactly this:
 
    ```
    hi installed this app on my phone - and I want to login - provide me with correct url and password to login
    ```
 
-3. Udah. Agent-nya yang akan mendiagnosis mismatch versi, memasang proot Ubuntu, memasang OpenCode 2.0.27, memigrasikan database sesimu, membuat password, dan menyerahkan URL + username + password yang benar untuk login di app.
+3. That's it. The agent will diagnose the version mismatch, install proot Ubuntu, install OpenCode 2.0.27, migrate your session database, create a password, and hand you the correct URL + username + password to log in with in the app.
 
-Yang perlu kamu lakukan cuma **mengawasi dan membaca laporannya** — terutama:
-- Catat URL, username, dan password yang dia berikan.
-- Pastikan server-nya hanya bind ke `127.0.0.1` (lihat Bab 9).
-- Minta dia membuatkan dokumen handover supaya kamu (dan AI lain yang membantumu) tahu persis apa yang sudah terpasang di HP-mu.
+Your only job is to **supervise and read its report** — especially:
+- Write down the URL, username, and password it gives you.
+- Make sure the server binds to `127.0.0.1` only (see Chapter 9).
+- Ask it to write a handover document, so you (and any other AI helping you) know exactly what got installed on your phone.
 
-Kalau kamu tipe yang mau paham semua langkahnya — atau agent-mu menyerah di tengah — jalur manualnya ada di Bab 4.
+If you're the type who wants to understand every step — or your agent gives up halfway — the manual route is Chapter 4.
 
 ---
 
-## Bab 4 — Cara manual: proot Ubuntu + OpenCode 2.0.27
+## Chapter 4 — The manual way: proot Ubuntu + OpenCode 2.0.27
 
-> Ringkasan jalur ini: install Ubuntu di Termux pakai proot-distro → install OpenCode **2.0.27** di dalamnya → (opsional) migrasikan database sesi dari server lama → buat script start/stop dengan password tetap → jalankan server di `127.0.0.1:4096`.
+> The short version: install Ubuntu in Termux with proot-distro → install OpenCode **2.0.27** inside it → (optional) migrate your session database from the old server → create start/stop scripts with a fixed password → run the server on `127.0.0.1:4096`.
 
-### 4.1 Install Ubuntu di Termux
+### 4.1 Install Ubuntu in Termux
 
 ```bash
 pkg update && pkg install proot-distro
 proot-distro install ubuntu
 ```
 
-Rootfs Ubuntu ukurannya sekitar 1,7 GB. Sabar, ini unduhan terbesar di tutorial ini.
+The Ubuntu rootfs is about 1.7 GB. Be patient — this is the biggest download in the tutorial.
 
-### 4.2 Install OpenCode 2.0.27 di dalam Ubuntu
+### 4.2 Install OpenCode 2.0.27 inside Ubuntu
 
-Masuk ke Ubuntu, lalu install dengan versi yang **dikunci**:
+Enter Ubuntu, then install with the version **pinned**:
 
 ```bash
 proot-distro login ubuntu
 curl -fsSL https://opencode.ai/v2/install | bash -s -- --version 2.0.27 --no-modify-path
 export PATH="$HOME/.opencode/bin:$PATH"
-opencode --version   # harus: 2.0.27
+opencode --version   # must say: 2.0.27
 exit
 ```
 
-⚠️ Jangan asal install versi terbaru. App v0.17.0 pasangannya adalah 2.0.27. (Kalau app-nya kelak naik spec, sesuaikan angka ini — caranya di Bab 7.)
+⚠️ Don't just install the latest version. App v0.17.0's partner is 2.0.27. (If the app moves to a new spec later, adjust this number — see Chapter 7.)
 
-### 4.3 (Opsional) Migrasikan sesi dari server lama
+### 4.3 (Optional) Migrate your sessions from the old server
 
-Kalau kamu sudah punya sesi di server native lama dan mau membawanya, backup databasenya **selagi server lama masih jalan** (online-safe):
+If you have sessions on the old native server and want to bring them along, back up its database **while the old server is still running** (online-safe):
 
 ```bash
-# di Termux (bukan di dalam proot)
+# in Termux (not inside proot)
 sqlite3 ~/.local/share/opencode/opencode.db ".backup ~/.local/share/opencode/ocm-migrate.db"
 ```
 
-Lalu taruh snapshot itu sebagai database server baru di dalam rootfs:
+Then place that snapshot as the new server's database inside the rootfs:
 
 ```bash
 proot-distro login ubuntu -- env -i HOME=/root PATH=/usr/bin:/bin bash -lc '
@@ -176,17 +178,17 @@ proot-distro login ubuntu -- env -i HOME=/root PATH=/usr/bin:/bin bash -lc '
   cp /data/data/com.termux/files/home/.local/share/opencode/ocm-migrate.db "$D/opencode.db"'
 ```
 
-Database akan dimigrasikan otomatis oleh server 2.0.27 saat pertama kali jalan.
+The database will be migrated automatically by the 2.0.27 server on first run.
 
-### 4.4 Buat script start / stop / shell
+### 4.4 Create the start / stop / shell scripts
 
-Tiga script kecil di `~/bin/` ini yang akan mengoperasikan servermu seterusnya. **Ganti `PASSWORD_KAMU` dengan password acak buatanmu sendiri** (contoh format: 24 karakter hex — buat pakai `openssl rand -hex 12` di Termux).
+These three small scripts in `~/bin/` are how you'll operate your server from now on. **Replace `YOUR_PASSWORD` with a random password of your own** (a good format: 24 hex characters — generate one with `openssl rand -hex 12` in Termux).
 
-`~/bin/oc-app-server` — menyalakan server:
+`~/bin/oc-app-server` — starts the server:
 
 ```bash
 #!/data/data/com.termux/files/usr/bin/bash
-export OPENCODE_SERVER_PASSWORD="PASSWORD_KAMU"
+export OPENCODE_SERVER_PASSWORD="YOUR_PASSWORD"
 export OPENCODE_SERVER_USERNAME="opencode"
 proot-distro login ubuntu -- env \
   OPENCODE_SERVER_PASSWORD="$OPENCODE_SERVER_PASSWORD" \
@@ -196,89 +198,89 @@ proot-distro login ubuntu -- env \
   >> ~/.local/share/opencode/app-server.log 2>&1
 ```
 
-`~/bin/oc-app-stop` — mematikan server:
+`~/bin/oc-app-stop` — stops the server:
 
 ```bash
 #!/data/data/com.termux/files/usr/bin/bash
 pkill -f "opencode serve --port 4096" 2>/dev/null
-echo "server dimatikan"
+echo "server stopped"
 ```
 
-`~/bin/oc-app-shell` — masuk ke Ubuntu dengan environment yang benar (untuk maintenance / `opencode auth login`):
+`~/bin/oc-app-shell` — enter Ubuntu with the right environment (for maintenance / `opencode auth login`):
 
 ```bash
 #!/data/data/com.termux/files/usr/bin/bash
 proot-distro login ubuntu -- env HOME=/root PATH=/root/.opencode/bin:/usr/bin:/bin bash "$@"
 ```
 
-Beri izin eksekusi, dan jaga file start-nya karena password-mu ada di dalamnya:
+Make them executable, and guard the start script — your password lives in it:
 
 ```bash
 chmod 700 ~/bin/oc-app-server ~/bin/oc-app-stop ~/bin/oc-app-shell
 mkdir -p ~/.local/share/opencode
 ```
 
-### 4.5 Jalankan dan verifikasi
+### 4.5 Start it and verify
 
 ```bash
 nohup ~/bin/oc-app-server >/dev/null 2>&1 &
 sleep 10
 
-# tanpa password → harus 401
+# without a password → must be 401
 curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:4096/api/info
 
-# dengan password → harus menampilkan versi 2.0.27
-curl -s -u opencode:PASSWORD_KAMU http://127.0.0.1:4096/api/info
+# with the password → must show version 2.0.27
+curl -s -u opencode:YOUR_PASSWORD http://127.0.0.1:4096/api/info
 # → {"version":"2.0.27", ...}
 ```
 
-Kalau dua cek itu lolos, servermu siap dipasangkan ke app.
+If both checks pass, your server is ready to pair with the app.
 
 ---
 
-## Bab 5 — Pairing ke app
+## Chapter 5 — Pairing the app
 
-1. Buka **OpenCode Mobile**.
-2. Pilih tambah server secara manual, isi:
+1. Open **OpenCode Mobile**.
+2. Choose to add a server manually, and fill in:
    - **URL:** `http://127.0.0.1:4096`
    - **Username:** `opencode`
-   - **Password:** password yang kamu buat di Bab 4.4
-3. Simpan. Statusnya harus berubah menjadi **Connected**, dan sesi-sesimu (termasuk yang termigrasi) muncul di daftar.
+   - **Password:** the password you created in Chapter 4.4
+3. Save. The status must turn **Connected**, and your sessions (including migrated ones) appear in the list.
 
-Selamat — remote control-nya sudah nyambung ke mesinnya. Sekarang bikin dia awet.
+Congratulations — the remote control is now talking to the engine. Now make it last.
 
 ---
 
-## Bab 6 — Biar awet: auto-start, baterai, start/stop
+## Chapter 6 — Making it survive: auto-start, battery, start/stop
 
-Server ini hidup di dalam Termux. Artinya: **kalau proses Termux mati, server ikut mati** — dan app tidak bisa menyalakannya sendiri. Bab ini yang membedakan setup "pernah berhasil connect" dengan setup yang awet dipakai harian. Semua poin di bab ini sudah lolos **uji restart HP beneran**.
+This server lives inside Termux. Which means: **if the Termux process dies, the server dies with it** — and the app cannot start it by itself. This chapter is the difference between a setup that "connected once" and a setup you can rely on daily. Every point here passed a **real phone-reboot test**.
 
-### 6.1 Perintah harian yang perlu kamu hafal
+### 6.1 The daily commands worth memorizing
 
 ```bash
-# menyalakan server (satu baris ini kuncinya)
+# start the server (this one line is the key)
 nohup ~/bin/oc-app-server >/dev/null 2>&1 &
 
-# mematikan server
+# stop the server
 ~/bin/oc-app-stop
 
-# cek server hidup atau mati — tanpa perlu buka app
+# check whether the server is alive — without opening the app
 curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:4096/api/info
-# 401 = HIDUP (dia minta password, itu bagus) · 000 = MATI
+# 401 = ALIVE (it's asking for a password — that's good) · 000 = DEAD
 ```
 
-### 6.2 Yang membunuh server (hindari)
+### 6.2 What kills the server (avoid these)
 
-- **Swipe-close Termux dari recents** → proses Termux mati → server mati.
-- **Force stop Termux** (dari Settings atau tombol EXIT di notifikasi Termux) → sama, mati total.
-- Menutup tampilan TUI OpenCode (`Ctrl+C`) itu **aman** — yang mati cuma tampilannya, server tetap hidup.
+- **Swipe-closing Termux from recents** → the Termux process dies → the server dies.
+- **Force-stopping Termux** (from Settings, or the EXIT button in Termux's notification) → same, total death.
+- Closing the OpenCode TUI view (`Ctrl+C`) is **safe** — only the view dies, the server keeps running.
 
-Kalau server mati karena salah satu di atas: buka Termux, jalankan baris `nohup` di 6.1, tunggu ±10 detik, app akan connect sendiri.
+If the server dies from any of the above: open Termux, run the `nohup` line from 6.1, wait ±10 seconds, and the app reconnects by itself.
 
-### 6.3 Auto-start setelah reboot: Termux:Boot
+### 6.3 Auto-start after reboot: Termux:Boot
 
-1. Install **Termux:Boot** dari sumber yang sama dengan Termux-mu (Bab 1), lalu **buka app-nya sekali** — langkah buka-sekali ini yang mengaktifkannya.
-2. Buat file hook `~/.termux/boot/oc-app-server`:
+1. Install **Termux:Boot** from the same source as your Termux (Chapter 1), then **open the app once** — that one open is what activates it.
+2. Create the hook file `~/.termux/boot/oc-app-server`:
 
    ```bash
    #!/data/data/com.termux/files/usr/bin/sh
@@ -286,92 +288,92 @@ Kalau server mati karena salah satu di atas: buka Termux, jalankan baris `nohup`
    nohup ~/bin/oc-app-server >/dev/null 2>&1 &
    ```
 
-3. Beri izin eksekusi: `chmod +x ~/.termux/boot/oc-app-server`
+3. Make it executable: `chmod +x ~/.termux/boot/oc-app-server`
 
-### 6.4 Jinakkan penghemat baterai
+### 6.4 Tame the battery saver
 
-Di Settings HP-mu:
+In your phone's Settings:
 
-- **Apps → Termux → Battery → Unrestricted** (di OxygenOS: nyalakan **Allow background activity**; "Allow foreground activity" juga biarkan menyala).
-- Kunci Termux di recents (ikon gembok) supaya tidak gampang ke-swipe bersih oleh sistem.
+- **Apps → Termux → Battery → Unrestricted** (on OxygenOS: turn ON **Allow background activity**; leave "Allow foreground activity" on too).
+- Lock Termux in recents (the padlock icon) so the system doesn't casually swipe it away.
 
-### 6.5 Uji restart (lakukan sekali, biar percaya)
+### 6.5 The reboot test (do it once, so you trust it)
 
-Restart HP-mu. Setelah nyala, **buka Termux sekali** — di banyak ROM (termasuk OxygenOS), proses Termux "dibangunkan" penuh saat app-nya dibuka, dan server hasil boot hook butuh itu. Tunggu ±1–5 menit (start proot pasca-boot memang lambat), lalu buka OpenCode Mobile: dia harus **Connected sendiri, tanpa kamu menjalankan perintah apa pun**.
+Restart your phone. After it boots, **open Termux once** — on many ROMs (OxygenOS included), the Termux process fully "wakes up" when you open the app, and the boot-hook server needs that. Wait ±1–5 minutes (a proot start right after boot is genuinely slow), then open OpenCode Mobile: it should be **Connected on its own, without you running a single command**.
 
-Rumus akhirnya simpel: **habis restart → buka Termux sekali → app konek.**
+The final formula is simple: **after a reboot → open Termux once → the app connects.**
 
 ---
 
-## Bab 7 — Troubleshooting
+## Chapter 7 — Troubleshooting
 
-| Gejala | Penyebab | Solusi |
+| Symptom | Cause | Fix |
 |---|---|---|
-| App: *"Not found on the server"* | Kamu menunjuk ke server 2.0.0 (port 28570) atau server versi lain yang tidak punya `/api/info` | Pastikan URL `:4096`; cek `curl .../api/info` harus menjawab versi yang cocok dengan app |
-| App: *Cannot reach the server* / Connection refused | Server 4096 mati | Jalankan baris `nohup` di Bab 6.1 |
-| 401 Unauthorized | Password salah | Cek `OPENCODE_SERVER_PASSWORD` di `~/bin/oc-app-server`; samakan dengan yang di app |
-| Habis reboot tidak connect | Termux:Boot belum ada / hook belum jalan / Termux belum dibuka | Bab 6.3 + buka Termux sekali (Bab 6.5) |
-| Server mati sendiri di tengah hari | Dibunuh penghemat baterai / ke-swipe | Bab 6.4; kunci Termux di recents |
-| App connect tapi chat error | Belum ada credential provider | `~/bin/oc-app-shell` → `opencode auth login` (pakai API key-mu sendiri), atau pakai model free bawaan `opencode` |
-| Sesi lama tidak muncul | Database belum dimigrasikan | Bab 4.3 |
-| App habis update, tiba-tiba tidak cocok lagi | App naik spec (mis. ke 2.3.2) | Upgrade server ke versi spec app: backup DB dulu, lalu di dalam proot: `curl -fsSL https://opencode.ai/v2/install \| bash -s -- --version <versi-target> --no-modify-path`, restart server |
-| Mau cek spec cocok atau tidak | — | Bandingkan `api/openapi.json` dari repo app (di tag versinya) dengan `/openapi.json` dari servermu: semua path app harus ada di server |
+| App: *"Not found on the server"* | You're pointing at the 2.0.0 server (port 28570), or another version without `/api/info` | Make sure the URL is `:4096`; `curl .../api/info` must answer with a version that matches the app |
+| App: *Cannot reach the server* / Connection refused | The 4096 server is dead | Run the `nohup` line from Chapter 6.1 |
+| 401 Unauthorized | Wrong password | Check `OPENCODE_SERVER_PASSWORD` in `~/bin/oc-app-server`; match it with the app |
+| No connection after a reboot | Termux:Boot missing / hook didn't run / Termux not opened yet | Chapter 6.3 + open Termux once (Chapter 6.5) |
+| Server dies by itself mid-day | Killed by the battery saver / swiped away | Chapter 6.4; lock Termux in recents |
+| App connects but chat errors | No provider credential yet | `~/bin/oc-app-shell` → `opencode auth login` (use your own API key), or use the built-in free `opencode` models |
+| Old sessions don't show up | Database not migrated | Chapter 4.3 |
+| App updated, suddenly incompatible again | The app moved to a new spec (e.g. 2.3.2) | Upgrade the server to the app's spec version: back up the DB first, then inside proot: `curl -fsSL https://opencode.ai/v2/install \| bash -s -- --version <target-version> --no-modify-path`, restart the server |
+| Want to check spec compatibility | — | Compare the app repo's `api/openapi.json` (at its version tag) with your server's `/openapi.json`: every app path must exist on the server |
 
 ---
 
-## Bab 8 — Bonus: server kedua dari laptop/desktop via Tailscale
+## Chapter 8 — Bonus: a second server from your laptop/desktop via Tailscale
 
-App-nya mendukung **banyak server tersimpan**. Kalau kamu punya OpenCode Desktop di laptop, kamu bisa menambahkan dia sebagai server kedua dan mengontrol kerjaan desktop dari HP.
+The app supports **multiple saved servers**. If you run OpenCode Desktop on a laptop, you can add it as a second server and steer desktop work from your phone.
 
-Prinsipnya sama — **spec harus cocok** — tapi kabar baiknya: OpenCode Desktop 2.3.2 menyediakan **142 path**, superset penuh dari 118 path yang dibutuhkan app v0.17.0 (terverifikasi: 0 path hilang). Jadi app lama pun bisa connect ke desktop baru.
+The principle is the same — **the spec must match** — but the news is good: OpenCode Desktop 2.3.2 provides **142 paths**, a full superset of the 118 paths app v0.17.0 needs (verified: 0 missing). So even the older app connects fine to the newer desktop.
 
-Langkah ringkas (Windows):
+Short version (Windows):
 
-1. Ambil binary CLI dari instalasi desktop-mu, contoh: `%APPDATA%\ai.opencode.desktop\cli\2.3.2-x64\opencode-cli.exe`. (Jangan pakai CLI npm lama kalau ada — versi 1.x tidak kompatibel databasenya dengan jalur 2.x.)
-2. Siapkan folder khusus dengan **data home terpisah** supaya database sesi server ini tidak bertabrakan dengan database app desktop:
+1. Take the CLI binary from your desktop install, e.g. `%APPDATA%\ai.opencode.desktop\cli\2.3.2-x64\opencode-cli.exe`. (Don't use an old npm CLI if you have one — the 1.x line's database is incompatible with the 2.x line.)
+2. Prepare a dedicated folder with a **separate data home**, so this server's session database doesn't collide with the desktop app's database:
 
    ```bat
-   set OPENCODE_SERVER_PASSWORD=PASSWORD_BARU_KAMU
+   set OPENCODE_SERVER_PASSWORD=YOUR_NEW_PASSWORD
    set OPENCODE_SERVER_USERNAME=opencode
-   set XDG_DATA_HOME=C:\path\ke\folder-server\data
-   set XDG_CONFIG_HOME=C:\path\ke\folder-server\config
-   opencode-cli.exe serve --port 4096 --hostname <IP-TAILSCALE-LAPTOP>
+   set XDG_DATA_HOME=C:\path\to\server-folder\data
+   set XDG_CONFIG_HOME=C:\path\to\server-folder\config
+   opencode-cli.exe serve --port 4096 --hostname <LAPTOP-TAILSCALE-IP>
    ```
 
-3. Bikin dia awet: bungkus perintah di atas dalam script `.cmd` dengan loop auto-restart, lalu daftarkan sebagai **Scheduled Task** yang jalan saat logon (matikan opsi "stop if on batteries" kalau laptopmu sering dipakai tanpa colokan).
-4. Di app, tambah server baru:
-   - **URL:** `http://<IP-TAILSCALE-LAPTOP>:4096`
+3. Make it stick: wrap the above in a `.cmd` script with an auto-restart loop, and register it as a **Scheduled Task** that runs at logon (turn off "stop if on batteries" if your laptop is often unplugged).
+4. In the app, add a new server:
+   - **URL:** `http://<LAPTOP-TAILSCALE-IP>:4096`
    - **Username:** `opencode`
-   - **Password:** password barumu di langkah 2
+   - **Password:** your new password from step 2
 
-Kenapa bind ke IP Tailscale, bukan `0.0.0.0`? Karena servermu jadi hanya bisa dijangkau lewat jaringan Tailscale-mu sendiri (terenkripsi, dari mana saja) — tidak terekspos ke Wi-Fi lokal, apalagi internet. Konsekuensi databasenya terpisah: sesi lama di app desktop tidak tampil di HP, tapi sesi baru yang kamu mulai dari HP **jalan beneran di laptop**.
-
----
-
-## Bab 9 — Keamanan (jangan skip)
-
-- **Server HP hanya bind `127.0.0.1`.** Jangan pernah mengubahnya ke `0.0.0.0` dan jangan pernah mem-forward port 4096 ke internet. Siapa pun yang bisa mencapai port itu hanya berhadapan dengan satu password.
-- Untuk akses lintas perangkat, **pakai Tailscale/WireGuard** (seperti Bab 8), bukan expose port.
-- Password server tersimpan plaintext di script start (`chmod 700`). Perlakukan file itu — dan **screenshot apa pun yang memuat password-mu** — sebagai rahasia. Jangan upload dokumen handover yang masih memuat password asli ke tempat publik. (Iya, ini ditulis berdasarkan pengalaman.)
-- Ganti password = edit `OPENCODE_SERVER_PASSWORD` di script, restart server, update juga di app.
-- proot itu lapisan kompatibilitas, **bukan** sandbox keamanan.
+Why bind to the Tailscale IP instead of `0.0.0.0`? Because then your server is reachable only through your own Tailscale network (encrypted, from anywhere) — not exposed to your local Wi-Fi, let alone the internet. The database separation has one consequence: your old desktop-app sessions won't show up on the phone, but new sessions you start from the phone **really run on the laptop**.
 
 ---
 
-## Penutup
+## Chapter 9 — Security (do not skip)
 
-Recap perjalananmu kalau kamu sampai di sini dengan app berstatus **Connected**:
+- **The phone server binds to `127.0.0.1` only.** Never change it to `0.0.0.0`, and never forward port 4096 to the internet. Anyone who can reach that port faces exactly one password.
+- For cross-device access, **use Tailscale/WireGuard** (like Chapter 8), not port exposure.
+- The server password is stored in plaintext in the start script (`chmod 700`). Treat that file — and **any screenshot that shows your password** — as a secret. Don't upload a handover document that still contains your real password anywhere public. (Yes, this line is written from experience.)
+- To change the password: edit `OPENCODE_SERVER_PASSWORD` in the script, restart the server, and update the app too.
+- proot is a compatibility layer, **not** a security sandbox.
 
-1. Kamu tahu kenapa "Not found on the server" muncul (spec mismatch, bukan salah password).
-2. Kamu punya server OpenCode 2.0.27 di proot Ubuntu, sesi lamamu ikut termigrasi.
-3. Kamu bisa menyalakan/mematikan/mengeceknya dengan tiga perintah pendek.
-4. Dia auto-start setelah reboot (cukup buka Termux sekali), dan tidak gampang dibunuh baterai.
-5. Bonus: laptop/desktop-mu pun bisa kamu setir dari HP yang sama.
+---
 
-**Tautan penting**
-- OpenCode Mobile (app): https://github.com/beppe2880/opencode-mobile
+## Closing
+
+Recap of your journey, if you made it here with the app showing **Connected**:
+
+1. You know why "Not found on the server" appears (spec mismatch, not a wrong password).
+2. You have an OpenCode 2.0.27 server in proot Ubuntu, with your old sessions migrated.
+3. You can start, stop, and check it with three short commands.
+4. It auto-starts after a reboot (just open Termux once), and the battery saver no longer kills it.
+5. Bonus: your laptop/desktop can be steered from the same phone, too.
+
+**Important links**
+- OpenCode Mobile (the app): https://github.com/beppe2880/opencode-mobile
 - Download v0.17.0: https://github.com/beppe2880/opencode-mobile/releases/tag/v0.17.0
 - Termux: https://f-droid.org/packages/com.termux/
 - Termux:Boot: https://f-droid.org/packages/com.termux.boot/
 
-*Tutorial ini didasarkan pada setup nyata di satu HP Android + satu laptop Windows, dibangun dan diverifikasi langkah demi langkah pada 21 November 2026 — termasuk bagian yang gagal di tengah jalan, supaya kamu tidak perlu mengulang kegagalan yang sama.*
+*This tutorial is based on a real setup on one Android phone + one Windows laptop, built and verified step by step on 21 November 2026 — including the parts that failed along the way, so you don't have to repeat the same failures.*
