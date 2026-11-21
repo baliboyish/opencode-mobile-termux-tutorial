@@ -6,6 +6,10 @@ Tutorial ini ditulis dari setup nyata yang dibangun dan diuji sendiri (termasuk 
 
 > **Males baca?** Bagikan link GitHub ini ke AI agent favoritmu dan suruh dia yang memandumu 😬
 
+![Sesi OpenCode live yang jalan di HP, dikontrol dari app OpenCode Mobile](images/opencode-mobile-session.jpg)
+
+*Hasil akhirnya: sesi OpenCode live di HP — tanpa laptop sama sekali — dikontrol penuh dari app OpenCode Mobile.*
+
 > **Versi yang dipakai tutorial ini**
 > - App: **OpenCode Mobile v0.17.0** (unofficial client oleh beppe2880) — spec API **2.0.27**
 > - Server di HP: **OpenCode 2.0.27** di dalam proot Ubuntu (Termux)

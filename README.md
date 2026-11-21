@@ -6,6 +6,10 @@ This tutorial was written from a real setup that was built and tested end to end
 
 > **Too dumb to read?** Share this GitHub link to your favorite AI agent and ask it to guide you 😬
 
+![A live OpenCode session running on the phone, driven from the OpenCode Mobile app](images/opencode-mobile-session.jpg)
+
+*The end result: a live OpenCode session on the phone — no laptop involved — driven entirely from the OpenCode Mobile app.*
+
 > **Versions used in this tutorial**
 > - App: **OpenCode Mobile v0.17.0** (unofficial client by beppe2880) — API spec **2.0.27**
 > - Phone server: **OpenCode 2.0.27** inside proot Ubuntu (Termux)
